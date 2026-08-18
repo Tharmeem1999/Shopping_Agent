@@ -9,7 +9,7 @@ PATH_DB = os.path.join(os.path.dirname(__file__),"store.db")
 
 def get_product_rating(product_id: int) -> dict:
 
-    """Return averae rating and review count for a single product"""
+    """Return average rating and review count for a single product"""
 
     conn = sqlite3.connect(PATH_DB)
     cursor = conn.cursor()
