@@ -70,7 +70,7 @@ def search_products(query: str, max_price: Optional[float] = None, is_organic: O
     return json.dumps(products)
 
 @tool
-def get_product_rating(product_id: int) -> str:
+def get_rating(product_id: int) -> str:
     """
     Get the average customer rating and total review count for a product by its ID.
     Returns a JSON object with: product_id, average_rating, review_count.
@@ -114,7 +114,7 @@ def checkout(product_id: int) -> str:
 # ---------------------------------------------------------------------------
 
 agent = create_agent(
-    tools=[search_products, get_product_rating, checkout],
+    tools=[search_products, get_rating, checkout],
     model=llm,
     system_prompt=(
         "You are a helpful shopping assistant. Follow these rules strictly.\n\n"
@@ -147,5 +147,37 @@ agent = create_agent(
 
 
 if __name__ == "__main__":
-    result = search_products("honey")
-    print(result)
+    result = agent.invoke(
+        {
+            "messages" : [
+                {
+                    "role" : "user",
+                    "content" : (
+                        "I want to buy organic honey with 4.5+ rating and less than $20 price."
+                    ),
+                }
+            ]
+        }
+    )
+
+    last = result["messages"][-1].content
+
+    # Normalize Gemini's mixed content shapes into clean plain text.
+    if isinstance(last, str):
+        text = last
+    elif isinstance(last, list):
+        parts = []
+        for block in last:
+            if isinstance(block, dict):
+                t = block.get("text")
+                if t:
+                    parts.append(t)
+            else:
+                t = getattr(block, "text", None)
+                if t:
+                    parts.append(t)
+        text = "\n".join(parts)
+    else:
+        text = getattr(last, "text", str(last))
+
+    print(text)
