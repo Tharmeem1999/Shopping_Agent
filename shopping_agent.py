@@ -34,18 +34,22 @@ def search_products(query: str, max_price: Optional[float] = None, is_organic: O
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Start with a dummy condition (1=1 is always true) so every filter below can safely start with 'AND'
     sql = "SELECT id, name, category, price, description, is_organic FROM products WHERE 1=1"
     params: list = []
 
+    # If the user typed a search word, match it against name, description, or category
     if query:
         sql += " AND (name LIKE ? OR description LIKE ? OR category LIKE ?)"
         like = f"%{query}%"
-        params.extend([like, like, like])
+        params.extend([like, like, like])   # 3 '?' placeholders need 3 values
 
+    # If the user set a budget limit, filter by max price
     if max_price is not None:
         sql += " AND price <= ?"
         params.append(max_price)
 
+    # If the user toggled organic, convert True/False to SQLite's 1/0
     if is_organic is not None:
         sql += " AND is_organic = ?"
         params.append(1 if is_organic else 0)
