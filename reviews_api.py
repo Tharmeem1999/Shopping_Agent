@@ -6,6 +6,7 @@ aggregated rating information for products.
 import sqlite3
 import os
 
+# Resolve the database path dynamically relative to this files's path
 DB_PATH = os.path.join(os.path.dirname(__file__), "store.db")
 
 
@@ -31,6 +32,8 @@ def get_ratings_for_products(product_ids: list[int]) -> list[dict]:
         return []
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    # Generate dynamic SQL placeholders safely to prevent SQL injection for variable-length lists
     placeholders = ",".join("?" * len(product_ids))
     cursor.execute(
         f"""
@@ -44,6 +47,7 @@ def get_ratings_for_products(product_ids: list[int]) -> list[dict]:
     rows = cursor.fetchall()
     conn.close()
 
+    # Map results by product_id for fast O(1) lookup
     ratings_map = {r[0]: {"average_rating": round(r[1], 2), "review_count": r[2]} for r in rows}
     return [
         {

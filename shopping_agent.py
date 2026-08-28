@@ -34,18 +34,22 @@ def search_products(query: str, max_price: Optional[float] = None, is_organic: O
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Start with a dummy condition (1=1 is always true) so every filter below can safely start with 'AND'
     sql = "SELECT id, name, category, price, description, is_organic FROM products WHERE 1=1"
     params: list = []
 
+    # If the user typed a search word, match it against name, description, or category
     if query:
         sql += " AND (name LIKE ? OR description LIKE ? OR category LIKE ?)"
         like = f"%{query}%"
-        params.extend([like, like, like])
+        params.extend([like, like, like])   # 3 '?' placeholders need 3 values
 
+    # If the user set a budget limit, filter by max price
     if max_price is not None:
         sql += " AND price <= ?"
         params.append(max_price)
 
+    # If the user toggled organic, convert True/False to SQLite's 1/0
     if is_organic is not None:
         sql += " AND is_organic = ?"
         params.append(1 if is_organic else 0)
@@ -54,6 +58,7 @@ def search_products(query: str, max_price: Optional[float] = None, is_organic: O
     rows = cursor.fetchall()
     conn.close()
 
+    # Convert raw database tuples to structured JSON format for agent consumption
     products = [
         {
             "id":          row[0],
@@ -74,6 +79,7 @@ def get_rating(product_id: int) -> str:
     Get the average customer rating and total review count for a product by its ID.
     Returns a JSON object with: product_id, average_rating, review_count.
     """
+    # Wrap reviews_api output as a JSON string for LLM tool invocation compatibility
     result = get_product_rating(product_id)
     return json.dumps(result)
 
@@ -115,12 +121,16 @@ def describe_product_image(image_path: str) -> str:
     Use this when the user uploads a photo of a product they are interested in.
     The returned attributes can be used directly with search_products.
     """
+
+    # Read and encode the local image file into a Base64 data URI for the multimodal LLM
     with open(image_path, "rb") as f:
         image_data = base64.b64encode(f.read()).decode()
 
+    # Determine MIME type dynamically from the file extension
     ext = os.path.splitext(image_path)[1].lower().lstrip(".")
     mime = "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
 
+    # Query the vision model with explicit structural constraints to guarantee clean JSON extraction
     message = HumanMessage(content=[
         {
             "type": "image_url",
