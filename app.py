@@ -68,6 +68,7 @@ with st.sidebar:
 # ---------------------------------------------------------------------------
 # Chat state
 # ---------------------------------------------------------------------------
+# Maintain conversation history across Streamlit reruns
 if "messages" not in st.session_state:
     st.session_state.messages = []
 

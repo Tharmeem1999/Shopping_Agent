@@ -54,6 +54,7 @@ def search_products(query: str, max_price: Optional[float] = None, is_organic: O
     rows = cursor.fetchall()
     conn.close()
 
+    # Convert raw database tuples to structured JSON format for agent consumption
     products = [
         {
             "id":          row[0],
@@ -74,6 +75,7 @@ def get_rating(product_id: int) -> str:
     Get the average customer rating and total review count for a product by its ID.
     Returns a JSON object with: product_id, average_rating, review_count.
     """
+    # Wrap reviews_api output as a JSON string for LLM tool invocation compatibility
     result = get_product_rating(product_id)
     return json.dumps(result)
 
@@ -115,12 +117,16 @@ def describe_product_image(image_path: str) -> str:
     Use this when the user uploads a photo of a product they are interested in.
     The returned attributes can be used directly with search_products.
     """
+
+    # Read and encode the local image file into a Base64 data URI for the multimodal LLM
     with open(image_path, "rb") as f:
         image_data = base64.b64encode(f.read()).decode()
 
+    # Determine MIME type dynamically from the file extension
     ext = os.path.splitext(image_path)[1].lower().lstrip(".")
     mime = "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
 
+    # Query the vision model with explicit structural constraints to guarantee clean JSON extraction
     message = HumanMessage(content=[
         {
             "type": "image_url",
