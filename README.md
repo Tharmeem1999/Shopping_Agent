@@ -70,8 +70,8 @@ Shopping_Agent/
 
 ## Screenshots
 
-<img width="1910" height="934" alt="Image" src="https://github.com/user-attachments/assets/6674b91d-ce45-4c75-a3c6-f64eee44abe0" />
 <img width="1910" height="934" alt="Image" src="https://github.com/user-attachments/assets/727cf6d0-cc59-49b2-b2d8-2fb855e63768" />
+<img width="1910" height="934" alt="Image" src="https://github.com/user-attachments/assets/6674b91d-ce45-4c75-a3c6-f64eee44abe0" />
 
 ---
 
